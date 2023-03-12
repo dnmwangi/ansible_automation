@@ -1,6 +1,6 @@
 ---
 - name: Get list of all users
-  hosts: your_host
+  hosts: all
   tasks:
     - name: Get list of all users
       shell: "cut -d: -f1 /etc/passwd | sort"
