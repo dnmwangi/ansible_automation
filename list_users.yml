@@ -1,6 +1,6 @@
 ---
 - name: Get list of regular users with group membership and password expiration date
-  hosts: your_host
+  hosts: all
   become: false
   tasks:
     - name: Get list of all users
