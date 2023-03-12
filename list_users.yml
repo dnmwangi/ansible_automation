@@ -1,11 +1,12 @@
 ---
-- name: Get list of all users
+- name: Get list of regular users
   hosts: all
+  become: true
   tasks:
     - name: Get list of all users
-      shell: "cut -d: -f1 /etc/passwd | sort"
+      shell: "getent passwd | awk -F: '$3>=1000 && $3<65534 { print $1 }' | sort"
       register: user_list
       
-    - name: Display list of users
+    - name: Display list of regular users
       debug:
         var: user_list.stdout_lines
