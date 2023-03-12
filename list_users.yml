@@ -1,0 +1,11 @@
+---
+- name: Get list of all users
+  hosts: your_host
+  tasks:
+    - name: Get list of all users
+      shell: "cut -d: -f1 /etc/passwd | sort"
+      register: user_list
+      
+    - name: Display list of users
+      debug:
+        var: user_list.stdout_lines
