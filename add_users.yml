@@ -1,0 +1,40 @@
+---
+- name: Create users on Linux system
+  hosts: linux_servers
+  become: yes
+
+  vars:
+    password_expiration_days: 90
+
+  tasks:
+    - name: Create user accounts
+      user:
+        name: "{{ item.firstname[0] }}{{ item.lastname }}"
+        comment: "{{ item.email }}"
+        password: "{{ lookup('password', '/dev/null length=20 chars=ascii_letters,digits') }}"
+        shell: /bin/bash
+        createhome: yes
+        expire_password: yes
+        password_max_days: "{{ password_expiration_days }}"
+      with_items:
+        - { firstname: "John", lastname: "Doe", email: "john.doe@example.com" }
+        - { firstname: "Jane", lastname: "Smith", email: "jane.smith@example.com" }
+
+    - name: Email passwords to clients
+      mail:
+        host: smtp.example.com
+        port: 25
+        subject: "Your new password"
+        to: "{{ item.email }}"
+        body: |
+          Dear {{ item.firstname }},
+
+          Your new password is: {{ item.password }}
+
+          Please log in to your account and change your password immediately.
+
+          Thank you,
+          Example Company
+      with_items:
+        - { firstname: "John", lastname: "Doe", email: "john.doe@example.com", password: "{{ lookup('password', '/dev/null length=20 chars=ascii_letters,digits') }}" }
+        - { firstname: "Jane", lastname: "Smith", email: "jane.smith@example.com", password: "{{ lookup('password', '/dev/null length=20 chars=ascii_letters,digits') }}" }
