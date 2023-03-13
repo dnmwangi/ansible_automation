@@ -1,0 +1,66 @@
+---
+- name: Create users on Linux system
+  hosts: linux_servers
+  become: yes
+
+  vars:
+    password_expiration_days: 90
+    users_file: users.txt
+    admin_email: admin@example.com
+
+  tasks:
+    - name: Read user data from file
+      read_csv:
+        path: "{{ users_file }}"
+        delimiter: ","
+        firstline: yes
+      register: user_data
+
+    - name: Create user accounts
+      user:
+        name: "{{ item.1[0] }}{{ item.1[1] }}"
+        comment: "{{ item.1[2] }}"
+        password: "{{ lookup('password', '/dev/null length=20 chars=ascii_letters,digits') }}"
+        shell: /bin/bash
+        createhome: yes
+        expire_password: yes
+        password_max_days: "{{ password_expiration_days }}"
+      loop: "{{ user_data.list }}"
+      loop_control:
+        label: "{{ item.1[2] }}"
+      register: user_creation_results
+
+    - name: Email passwords to clients
+      mail:
+        host: smtp.example.com
+        port: 25
+        subject: "Your new password"
+        to: "{{ item.1[2] }}"
+        body: |
+          Dear {{ item.1[0] }},
+
+          Your new password is: {{ item.0.password }}
+
+          Please log in to your account and change your password immediately.
+
+          Thank you,
+          Example Company
+      loop: "{{ user_data.list }}"
+      loop_control:
+        label: "{{ item.1[2] }}"
+      vars:
+        password: "{{ lookup('password', '/dev/null length=20 chars=ascii_letters,digits') }}"
+
+    - name: Send email to admin
+      mail:
+        host: smtp.example.com
+        port: 25
+        subject: "User creation report"
+        to: "{{ admin_email }}"
+        body: |
+          The user creation playbook has been run on {{ ansible_date_time.iso8601 }}.
+          
+          {{ user_creation_results | to_nice_json }}
+
+          Thank you,
+          Example Company
