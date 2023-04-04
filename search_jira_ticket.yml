@@ -1,0 +1,13 @@
+- name: Search for an issue
+  community.general.jira:
+    uri: '{{ server }}'
+    username: '{{ user }}'
+    password: '{{ pass }}'
+    project: ANS
+    operation: search
+    maxresults: 10
+    jql: project=cmdb AND cf[13225]="test"
+  args:
+    fields:
+      lastViewed: null
+  register: issue
